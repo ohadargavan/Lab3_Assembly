@@ -27,6 +27,17 @@ int main(int argc, char *argv[]) {
     struct linux_dirent *d;
     int bpos;
 
+    /*variables for scanning arguments and keek the prefix*/
+    int i;
+    char prefix = 0;
+
+    /*scanning the arguments to find the -a flag*/
+    for (i = 1; i < argc; i++) {
+        if (strncmp(argv[i], "-a", 2) == 0) {
+            prefix = argv[i][2]; /*retrieve third letter*/
+        }
+    }
+
     /*open current folder for reading*/
     fd = system_call(SYS_OPEN, (int)".", O_RDONLY, 0);
     
@@ -48,11 +59,15 @@ int main(int argc, char *argv[]) {
         /*convert current adress in the buffer to a pointer of our structure*/
         d = (struct linux_dirent *) (buf + bpos);
 
-        /*print file name with sys_write (1= screen)*/
-        system_call(SYS_WRITE, 1, (int)d->d_name, strlen(d->d_name));
-        
-        /* print \n */
-        system_call(SYS_WRITE, 1, (int)"\n", 1);
+        /*either no filtering or name fits prefix*/
+        if (prefix == 0 || d->d_name[0] == prefix) {
+
+            /*print file name with sys_write (1= screen)*/
+            system_call(SYS_WRITE, 1, (int)d->d_name, strlen(d->d_name));
+            
+            /* print \n */
+            system_call(SYS_WRITE, 1, (int)"\n", 1);
+        }
 
         /*advance the pointer in the cur struc size to get to the next struct */
         bpos += d->d_reclen;
